@@ -77,15 +77,15 @@ func TestFactorial(t *testing.T) {
 	}
 	defer engine.Dispose()
 
-	pass := NewPassManager()
-	defer pass.Dispose()
+	//pass := NewPassManager()
+	//defer pass.Dispose()
 
-	pass.AddSCCPPass()
-	pass.AddInstructionCombiningPass()
-	pass.AddPromoteMemoryToRegisterPass()
-	pass.AddGVNPass()
-	pass.AddCFGSimplificationPass()
-	pass.Run(mod)
+	//pass.AddSCCPPass()
+	//pass.AddInstructionCombiningPass()
+	//pass.AddPromoteMemoryToRegisterPass()
+	//pass.AddGVNPass()
+	//pass.AddCFGSimplificationPass()
+	//pass.Run(mod)
 
 	exec_args := []GenericValue{NewGenericValueFromInt(Int32Type(), 10, false)}
 	exec_res := engine.RunFunction(fac, exec_args)

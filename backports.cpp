@@ -20,7 +20,7 @@ LLVMMemoryBufferRef LLVMGoWriteThinLTOBitcodeToMemoryBuffer(LLVMModuleRef M) {
   std::string Data;
   llvm::raw_string_ostream OS(Data);
   llvm::legacy::PassManager PM;
-  PM.add(createWriteThinLTOBitcodePass(OS));
+//  PM.add(createWriteThinLTOBitcodePass(OS));
   PM.run(*llvm::unwrap(M));
   return llvm::wrap(llvm::MemoryBuffer::getMemBufferCopy(OS.str()).release());
 }

@@ -911,14 +911,15 @@ func ConstVector(scalarConstVals []Value, packed bool) (v Value) {
 }
 
 // Constant expressions
-func (v Value) Opcode() Opcode             { return Opcode(C.LLVMGetConstOpcode(v.C)) }
-func (v Value) InstructionOpcode() Opcode  { return Opcode(C.LLVMGetInstructionOpcode(v.C)) }
-func AlignOf(t Type) (v Value)             { v.C = C.LLVMAlignOf(t.C); return }
-func SizeOf(t Type) (v Value)              { v.C = C.LLVMSizeOf(t.C); return }
-func ConstNeg(v Value) (rv Value)          { rv.C = C.LLVMConstNeg(v.C); return }
-func ConstNSWNeg(v Value) (rv Value)       { rv.C = C.LLVMConstNSWNeg(v.C); return }
-func ConstNUWNeg(v Value) (rv Value)       { rv.C = C.LLVMConstNUWNeg(v.C); return }
-func ConstFNeg(v Value) (rv Value)         { rv.C = C.LLVMConstFNeg(v.C); return }
+func (v Value) Opcode() Opcode            { return Opcode(C.LLVMGetConstOpcode(v.C)) }
+func (v Value) InstructionOpcode() Opcode { return Opcode(C.LLVMGetInstructionOpcode(v.C)) }
+func AlignOf(t Type) (v Value)            { v.C = C.LLVMAlignOf(t.C); return }
+func SizeOf(t Type) (v Value)             { v.C = C.LLVMSizeOf(t.C); return }
+func ConstNeg(v Value) (rv Value)         { rv.C = C.LLVMConstNeg(v.C); return }
+func ConstNSWNeg(v Value) (rv Value)      { rv.C = C.LLVMConstNSWNeg(v.C); return }
+func ConstNUWNeg(v Value) (rv Value)      { rv.C = C.LLVMConstNUWNeg(v.C); return }
+
+// func ConstFNeg(v Value) (rv Value)         { rv.C = C.LLVMConstFNeg(v.C); return }
 func ConstNot(v Value) (rv Value)          { rv.C = C.LLVMConstNot(v.C); return }
 func ConstAdd(lhs, rhs Value) (v Value)    { v.C = C.LLVMConstAdd(lhs.C, rhs.C); return }
 func ConstNSWAdd(lhs, rhs Value) (v Value) { v.C = C.LLVMConstNSWAdd(lhs.C, rhs.C); return }
@@ -986,10 +987,11 @@ func ConstIntCast(v Value, t Type, signed bool) (rv Value) {
 	return
 }
 func ConstFPCast(v Value, t Type) (rv Value) { rv.C = C.LLVMConstFPCast(v.C, t.C); return }
-func ConstSelect(cond, iftrue, iffalse Value) (rv Value) {
-	rv.C = C.LLVMConstSelect(cond.C, iftrue.C, iffalse.C)
-	return
-}
+
+//	func ConstSelect(cond, iftrue, iffalse Value) (rv Value) {
+//		rv.C = C.LLVMConstSelect(cond.C, iftrue.C, iffalse.C)
+//		return
+//	}
 func ConstExtractElement(vec, i Value) (rv Value) {
 	rv.C = C.LLVMConstExtractElement(vec.C, i.C)
 	return
