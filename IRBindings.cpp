@@ -85,3 +85,7 @@ LLVMValueRef LLVMGoGetInlineAsm(LLVMTypeRef Ty, char *AsmString,
                           IsAlignStack,
                           Dialect, CanThrow);
 }
+
+LLVMTypeRef LLVMFunctionTypeOf(LLVMValueRef f) {
+    return wrap(unwrap<Function>(f)->getFunctionType());
+}
