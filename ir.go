@@ -1363,6 +1363,14 @@ func (b Builder) InsertWithName(instr Value, name string) {
 }
 func (b Builder) Dispose() { C.LLVMDisposeBuilder(b.C) }
 
+// Freeze
+func (b Builder) CreateFreeze(instr Value, name string) (v Value) {
+	cname := C.CString(name)
+	defer C.free(unsafe.Pointer(cname))
+	v.C = C.LLVMBuildFreeze(b.C, instr.C, cname)
+	return
+}
+
 // Metadata
 type DebugLoc struct {
 	Line, Col uint
