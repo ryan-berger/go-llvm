@@ -19,8 +19,10 @@ package llvm
 #include <stdlib.h>
 */
 import "C"
-import "unsafe"
-import "errors"
+import (
+	"errors"
+	"unsafe"
+)
 
 type (
 	// We use these weird structs here because *Ref types are pointers and
@@ -446,13 +448,6 @@ func (a Attribute) IsString() bool {
 
 // Create and destroy modules.
 // See llvm::Module::Module.
-func NewModule(name string) (m Module) {
-	cname := C.CString(name)
-	defer C.free(unsafe.Pointer(cname))
-	m.C = C.LLVMModuleCreateWithName(cname)
-	return
-}
-
 func (c Context) NewModule(name string) (m Module) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
@@ -500,7 +495,7 @@ func (m Module) Dump() {
 
 func (m Module) String() string {
 	cir := C.LLVMPrintModuleToString(m.C)
-	defer C.free(unsafe.Pointer(cir))
+	defer C.LLVMDisposeMessage(cir)
 	ir := C.GoString(cir)
 	return ir
 }
@@ -561,17 +556,6 @@ func (c Context) IntType(numbits int) (t Type) {
 	return
 }
 
-func Int1Type() (t Type)  { t.C = C.LLVMInt1Type(); return }
-func Int8Type() (t Type)  { t.C = C.LLVMInt8Type(); return }
-func Int16Type() (t Type) { t.C = C.LLVMInt16Type(); return }
-func Int32Type() (t Type) { t.C = C.LLVMInt32Type(); return }
-func Int64Type() (t Type) { t.C = C.LLVMInt64Type(); return }
-
-func IntType(numbits int) (t Type) {
-	t.C = C.LLVMIntType(C.unsigned(numbits))
-	return
-}
-
 func (t Type) IntTypeWidth() int {
 	return int(C.LLVMGetIntTypeWidth(t.C))
 }
@@ -582,12 +566,6 @@ func (c Context) DoubleType() (t Type)   { t.C = C.LLVMDoubleTypeInContext(c.C);
 func (c Context) X86FP80Type() (t Type)  { t.C = C.LLVMX86FP80TypeInContext(c.C); return }
 func (c Context) FP128Type() (t Type)    { t.C = C.LLVMFP128TypeInContext(c.C); return }
 func (c Context) PPCFP128Type() (t Type) { t.C = C.LLVMPPCFP128TypeInContext(c.C); return }
-
-func FloatType() (t Type)    { t.C = C.LLVMFloatType(); return }
-func DoubleType() (t Type)   { t.C = C.LLVMDoubleType(); return }
-func X86FP80Type() (t Type)  { t.C = C.LLVMX86FP80Type(); return }
-func FP128Type() (t Type)    { t.C = C.LLVMFP128Type(); return }
-func PPCFP128Type() (t Type) { t.C = C.LLVMPPCFP128Type(); return }
 
 // Operations on function types
 func FunctionType(returnType Type, paramTypes []Type, isVarArg bool) (t Type) {
@@ -704,9 +682,6 @@ func (c Context) VoidType() (t Type)  { t.C = C.LLVMVoidTypeInContext(c.C); retu
 func (c Context) LabelType() (t Type) { t.C = C.LLVMLabelTypeInContext(c.C); return }
 func (c Context) TokenType() (t Type) { t.C = C.LLVMTokenTypeInContext(c.C); return }
 
-func VoidType() (t Type)  { t.C = C.LLVMVoidType(); return }
-func LabelType() (t Type) { t.C = C.LLVMLabelType(); return }
-
 //-------------------------------------------------------------------------
 // llvm.Value
 //-------------------------------------------------------------------------
@@ -729,6 +704,14 @@ func (v Value) Metadata(kind int) (rv Value) {
 }
 func (v Value) SetMetadata(kind int, node Metadata) {
 	C.LLVMSetMetadata2(v.C, C.unsigned(kind), node.C)
+}
+
+// Obtain the string value of the instruction. Same as would be printed with
+// Value.Dump() (with two spaces at the start but no newline at the end).
+func (v Value) String() string {
+	cstr := C.LLVMPrintValueToString(v.C)
+	defer C.LLVMDisposeMessage(cstr)
+	return C.GoString(cstr)
 }
 
 // Conversion functions.
@@ -911,6 +894,18 @@ func ConstVector(scalarConstVals []Value, packed bool) (v Value) {
 	return
 }
 
+// IsConstantString checks if the constant is an array of i8.
+func (v Value) IsConstantString() bool {
+	return C.LLVMIsConstantString(v.C) != 0
+}
+
+// ConstGetAsString will return the string contained in a constant.
+func (v Value) ConstGetAsString() string {
+	length := C.size_t(0)
+	cstr := C.LLVMGetAsString(v.C, &length)
+	return C.GoStringN(cstr, C.int(length))
+}
+
 // Constant expressions
 func (v Value) Opcode() Opcode             { return Opcode(C.LLVMGetConstOpcode(v.C)) }
 func (v Value) InstructionOpcode() Opcode  { return Opcode(C.LLVMGetInstructionOpcode(v.C)) }
@@ -929,8 +924,6 @@ func ConstNUWSub(lhs, rhs Value) (v Value) { v.C = C.LLVMConstNUWSub(lhs.C, rhs.
 func ConstMul(lhs, rhs Value) (v Value)    { v.C = C.LLVMConstMul(lhs.C, rhs.C); return }
 func ConstNSWMul(lhs, rhs Value) (v Value) { v.C = C.LLVMConstNSWMul(lhs.C, rhs.C); return }
 func ConstNUWMul(lhs, rhs Value) (v Value) { v.C = C.LLVMConstNUWMul(lhs.C, rhs.C); return }
-func ConstAnd(lhs, rhs Value) (v Value)    { v.C = C.LLVMConstAnd(lhs.C, rhs.C); return }
-func ConstOr(lhs, rhs Value) (v Value)     { v.C = C.LLVMConstOr(lhs.C, rhs.C); return }
 func ConstXor(lhs, rhs Value) (v Value)    { v.C = C.LLVMConstXor(lhs.C, rhs.C); return }
 
 func ConstICmp(pred IntPredicate, lhs, rhs Value) (v Value) {
@@ -942,9 +935,7 @@ func ConstFCmp(pred FloatPredicate, lhs, rhs Value) (v Value) {
 	return
 }
 
-func ConstShl(lhs, rhs Value) (v Value)  { v.C = C.LLVMConstShl(lhs.C, rhs.C); return }
-func ConstLShr(lhs, rhs Value) (v Value) { v.C = C.LLVMConstLShr(lhs.C, rhs.C); return }
-func ConstAShr(lhs, rhs Value) (v Value) { v.C = C.LLVMConstAShr(lhs.C, rhs.C); return }
+func ConstShl(lhs, rhs Value) (v Value) { v.C = C.LLVMConstShl(lhs.C, rhs.C); return }
 
 func ConstGEP(t Type, v Value, indices []Value) (rv Value) {
 	ptr, nvals := llvmValueRefs(indices)
@@ -957,25 +948,9 @@ func ConstInBoundsGEP(t Type, v Value, indices []Value) (rv Value) {
 	return
 }
 func ConstTrunc(v Value, t Type) (rv Value)    { rv.C = C.LLVMConstTrunc(v.C, t.C); return }
-func ConstSExt(v Value, t Type) (rv Value)     { rv.C = C.LLVMConstSExt(v.C, t.C); return }
-func ConstZExt(v Value, t Type) (rv Value)     { rv.C = C.LLVMConstZExt(v.C, t.C); return }
-func ConstFPTrunc(v Value, t Type) (rv Value)  { rv.C = C.LLVMConstFPTrunc(v.C, t.C); return }
-func ConstFPExt(v Value, t Type) (rv Value)    { rv.C = C.LLVMConstFPExt(v.C, t.C); return }
-func ConstUIToFP(v Value, t Type) (rv Value)   { rv.C = C.LLVMConstUIToFP(v.C, t.C); return }
-func ConstSIToFP(v Value, t Type) (rv Value)   { rv.C = C.LLVMConstSIToFP(v.C, t.C); return }
-func ConstFPToUI(v Value, t Type) (rv Value)   { rv.C = C.LLVMConstFPToUI(v.C, t.C); return }
-func ConstFPToSI(v Value, t Type) (rv Value)   { rv.C = C.LLVMConstFPToSI(v.C, t.C); return }
 func ConstPtrToInt(v Value, t Type) (rv Value) { rv.C = C.LLVMConstPtrToInt(v.C, t.C); return }
 func ConstIntToPtr(v Value, t Type) (rv Value) { rv.C = C.LLVMConstIntToPtr(v.C, t.C); return }
 func ConstBitCast(v Value, t Type) (rv Value)  { rv.C = C.LLVMConstBitCast(v.C, t.C); return }
-func ConstZExtOrBitCast(v Value, t Type) (rv Value) {
-	rv.C = C.LLVMConstZExtOrBitCast(v.C, t.C)
-	return
-}
-func ConstSExtOrBitCast(v Value, t Type) (rv Value) {
-	rv.C = C.LLVMConstSExtOrBitCast(v.C, t.C)
-	return
-}
 func ConstTruncOrBitCast(v Value, t Type) (rv Value) {
 	rv.C = C.LLVMConstTruncOrBitCast(v.C, t.C)
 	return
@@ -1347,7 +1322,6 @@ func (v Value) AllocatedType() (t Type) { t.C = C.LLVMGetAllocatedType(v.C); ret
 // exclusive means of building instructions using the C interface.
 
 func (c Context) NewBuilder() (b Builder) { b.C = C.LLVMCreateBuilderInContext(c.C); return }
-func NewBuilder() (b Builder)             { b.C = C.LLVMCreateBuilder(); return }
 func (b Builder) SetInsertPoint(block BasicBlock, instr Value) {
 	C.LLVMPositionBuilder(b.C, block.C, instr.C)
 }
@@ -1394,7 +1368,7 @@ func (b Builder) GetCurrentDebugLocation() (loc DebugLoc) {
 func (b Builder) SetInstDebugLocation(v Value) { C.LLVMSetInstDebugLocation(b.C, v.C) }
 func (b Builder) InsertDeclare(module Module, storage Value, md Value) Value {
 	f := module.NamedFunction("llvm.dbg.declare")
-	ftyp := FunctionType(VoidType(), []Type{storage.Type(), md.Type()}, false)
+	ftyp := FunctionType(module.Context().VoidType(), []Type{storage.Type(), md.Type()}, false)
 	if f.IsNil() {
 		f = AddFunction(module, "llvm.dbg.declare", ftyp)
 	}
