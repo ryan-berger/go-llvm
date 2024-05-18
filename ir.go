@@ -687,8 +687,9 @@ func (c Context) TokenType() (t Type) { t.C = C.LLVMTokenTypeInContext(c.C); ret
 //-------------------------------------------------------------------------
 
 // Operations on all values
-func (v Value) Type() (t Type) { t.C = C.LLVMTypeOf(v.C); return }
-func (v Value) Name() string   { return C.GoString(C.LLVMGetValueName(v.C)) }
+func (v Value) Type() (t Type)         { t.C = C.LLVMTypeOf(v.C); return }
+func (v Value) FunctionType() (t Type) { t.C = C.LLVMFunctionTypeOf(v.C); return }
+func (v Value) Name() string           { return C.GoString(C.LLVMGetValueName(v.C)) }
 func (v Value) SetName(name string) {
 	cname := C.CString(name)
 	defer C.free(unsafe.Pointer(cname))
@@ -934,7 +935,7 @@ func ConstFCmp(pred FloatPredicate, lhs, rhs Value) (v Value) {
 	return
 }
 
-func ConstShl(lhs, rhs Value) (v Value)  { v.C = C.LLVMConstShl(lhs.C, rhs.C); return }
+func ConstShl(lhs, rhs Value) (v Value) { v.C = C.LLVMConstShl(lhs.C, rhs.C); return }
 
 func ConstGEP(t Type, v Value, indices []Value) (rv Value) {
 	ptr, nvals := llvmValueRefs(indices)
@@ -955,6 +956,12 @@ func ConstTruncOrBitCast(v Value, t Type) (rv Value) {
 	return
 }
 func ConstPointerCast(v Value, t Type) (rv Value) { rv.C = C.LLVMConstPointerCast(v.C, t.C); return }
+func ConstIntCast(v Value, t Type, signed bool) (rv Value) {
+	rv.C = C.LLVMConstIntCast(v.C, t.C, boolToLLVMBool(signed))
+	return
+}
+func ConstFPCast(v Value, t Type) (rv Value) { rv.C = C.LLVMConstFPCast(v.C, t.C); return }
+
 func ConstExtractElement(vec, i Value) (rv Value) {
 	rv.C = C.LLVMConstExtractElement(vec.C, i.C)
 	return
@@ -1329,6 +1336,14 @@ func (b Builder) InsertWithName(instr Value, name string) {
 	C.LLVMInsertIntoBuilderWithName(b.C, instr.C, cname)
 }
 func (b Builder) Dispose() { C.LLVMDisposeBuilder(b.C) }
+
+// Freeze
+func (b Builder) CreateFreeze(instr Value, name string) (v Value) {
+	cname := C.CString(name)
+	defer C.free(unsafe.Pointer(cname))
+	v.C = C.LLVMBuildFreeze(b.C, instr.C, cname)
+	return
+}
 
 // Metadata
 type DebugLoc struct {

@@ -43,7 +43,7 @@ LLVMMemoryBufferRef LLVMGoWriteThinLTOBitcodeToMemoryBuffer(LLVMModuleRef M) {
   MPM.run(*llvm::unwrap(M), MAM);
 #else
   llvm::legacy::PassManager PM;
-  PM.add(createWriteThinLTOBitcodePass(OS));
+//  PM.add(createWriteThinLTOBitcodePass(OS));
   PM.run(*llvm::unwrap(M));
 #endif
   return llvm::wrap(llvm::MemoryBuffer::getMemBufferCopy(OS.str()).release());
