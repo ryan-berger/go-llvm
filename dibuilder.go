@@ -612,21 +612,21 @@ func (d *DIBuilder) CreateExpression(addr []uint64) Metadata {
 
 // InsertDeclareAtEnd inserts a call to llvm.dbg.declare at the end of the
 // specified basic block for the given value and associated debug metadata.
-func (d *DIBuilder) InsertDeclareAtEnd(v Value, diVarInfo, expr Metadata, l DebugLoc, bb BasicBlock) Value {
-	loc := C.LLVMDIBuilderCreateDebugLocation(
-		d.m.Context().C, C.uint(l.Line), C.uint(l.Col), l.Scope.C, l.InlinedAt.C)
-	result := C.LLVMDIBuilderInsertDeclareAtEnd(d.ref, v.C, diVarInfo.C, expr.C, loc, bb.C)
-	return Value{C: result}
-}
+//func (d *DIBuilder) InsertDeclareAtEnd(v Value, diVarInfo, expr Metadata, l DebugLoc, bb BasicBlock) Value {
+//	loc := C.LLVMDIBuilderCreateDebugLocation(
+//		d.m.Context().C, C.uint(l.Line), C.uint(l.Col), l.Scope.C, l.InlinedAt.C)
+//	result := C.LLVMDIBuilderInsertDeclareAtEnd(d.ref, v.C, diVarInfo.C, expr.C, loc, bb.C)
+//	return Value{C: result}
+//}
 
 // InsertValueAtEnd inserts a call to llvm.dbg.value at the end of the
 // specified basic block for the given value and associated debug metadata.
-func (d *DIBuilder) InsertValueAtEnd(v Value, diVarInfo, expr Metadata, l DebugLoc, bb BasicBlock) Value {
-	loc := C.LLVMDIBuilderCreateDebugLocation(
-		d.m.Context().C, C.uint(l.Line), C.uint(l.Col), l.Scope.C, l.InlinedAt.C)
-	result := C.LLVMDIBuilderInsertDbgValueAtEnd(d.ref, v.C, diVarInfo.C, expr.C, loc, bb.C)
-	return Value{C: result}
-}
+//func (d *DIBuilder) InsertValueAtEnd(v Value, diVarInfo, expr Metadata, l DebugLoc, bb BasicBlock) Value {
+//	loc := C.LLVMDIBuilderCreateDebugLocation(
+//		d.m.Context().C, C.uint(l.Line), C.uint(l.Col), l.Scope.C, l.InlinedAt.C)
+//	result := C.LLVMDIBuilderInsertDbgValueAtEnd(d.ref, v.C, diVarInfo.C, expr.C, loc, bb.C)
+//	return Value{C: result}
+//}
 
 func (v Value) SetSubprogram(sp Metadata) {
 	C.LLVMSetSubprogram(v.C, sp.C)
