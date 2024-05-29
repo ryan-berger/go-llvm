@@ -1145,6 +1145,21 @@ func (v Value) SetPersonality(p Value) {
 	C.LLVMSetPersonalityFn(v.C, p.C)
 }
 
+type FastMathFlags C.LLVMFastMathFlags
+
+const (
+	AllowReassoc = FastMathFlags(C.LLVMFastMathAllowReassoc)
+	NoNaNs       = FastMathFlags(C.LLVMFastMathNoNaNs)
+)
+
+func (v Value) GetFastMathFlags() FastMathFlags {
+	return FastMathFlags(C.LLVMGetFastMathFlags(v.C))
+}
+
+func (v Value) SetFastMathFlags(flags FastMathFlags) {
+	C.LLVMSetFastMathFlags(v.C, C.LLVMFastMathFlags(flags))
+}
+
 // Operations on parameters
 func (v Value) ParamsCount() int { return int(C.LLVMCountParams(v.C)) }
 func (v Value) Params() []Value {
